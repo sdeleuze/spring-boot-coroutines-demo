@@ -1,0 +1,5 @@
+= Spring Boot Coroutines demo
+
+This project demonstrates how to use https://docs.spring.io/spring/docs/5.2.0.BUILD-SNAPSHOT/spring-framework-reference/languages.html#coroutines[WebFlux Coroutines API] from a Spring Boot application.
+
+
