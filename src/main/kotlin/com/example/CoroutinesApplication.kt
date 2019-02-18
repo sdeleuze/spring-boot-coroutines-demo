@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.client.awaitResponse
 import org.springframework.web.reactive.function.server.*
 
 @SpringBootApplication
-class SpringBootCoroutinesDemoApplication {
+class CoroutinesApplication {
 
 	@Bean
 	fun routes(handlers: Handlers) = coRouter {
@@ -34,10 +34,15 @@ class Handlers(builder: WebClient.Builder) {
 	private val client = builder.baseUrl("http://localhost:8080").build()
 
 	suspend fun index(request: ServerRequest) =
-			ServerResponse.ok().renderAndAwait("index", mapOf("banner" to banner))
+			ServerResponse
+					.ok()
+					.renderAndAwait("index", mapOf("banner" to banner))
 
 	suspend fun api(request: ServerRequest) =
-			ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyAndAwait(banner)
+			ServerResponse
+					.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.bodyAndAwait(banner)
 
 	suspend fun sequential(request: ServerRequest): ServerResponse {
 		val banner1 = client
@@ -52,7 +57,10 @@ class Handlers(builder: WebClient.Builder) {
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitResponse()
 				.awaitBody<Banner>()
-		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyAndAwait(listOf(banner1, banner2))
+		return ServerResponse
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyAndAwait(listOf(banner1, banner2))
 	}
 
 	suspend fun parallel(request: ServerRequest): ServerResponse  = coroutineScope {
@@ -70,10 +78,13 @@ class Handlers(builder: WebClient.Builder) {
 				.awaitResponse()
 				.awaitBody<Banner>()
 		}
-		ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyAndAwait(listOf(deferredBanner1.await(), deferredBanner2.await()))
+		ServerResponse
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyAndAwait(listOf(deferredBanner1.await(), deferredBanner2.await()))
 	}
 }
 
 fun main(args: Array<String>) {
-	runApplication<SpringBootCoroutinesDemoApplication>(*args)
+	runApplication<CoroutinesApplication>(*args)
 }
