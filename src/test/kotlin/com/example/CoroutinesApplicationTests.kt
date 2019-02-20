@@ -30,4 +30,14 @@ class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
 		client.get().uri("/parallel").accept(MediaType.APPLICATION_JSON).exchange().expectStatus().is2xxSuccessful.expectBody()
 	}
 
+	@Test
+	fun error() {
+		client.get().uri("/error").exchange().expectStatus().is5xxServerError
+	}
+
+	@Test
+	fun cancel() {
+		client.get().uri("/cancel").exchange().expectStatus().is5xxServerError
+	}
+
 }

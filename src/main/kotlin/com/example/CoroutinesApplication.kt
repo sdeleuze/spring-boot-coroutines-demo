@@ -1,5 +1,6 @@
 package com.example
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -21,6 +22,8 @@ class CoroutinesApplication {
 		GET("/api", handlers::api)
 		GET("/sequential", handlers::sequential)
 		GET("/parallel", handlers::parallel)
+		GET("/error", handlers::error)
+		GET("/cancel", handlers::cancel)
 	}
 }
 
@@ -47,13 +50,13 @@ class Handlers(builder: WebClient.Builder) {
 	suspend fun sequential(request: ServerRequest): ServerResponse {
 		val banner1 = client
 				.get()
-				.uri("/api" )
+				.uri("/api")
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitResponse()
 				.awaitBody<Banner>()
 		val banner2 = client
 				.get()
-				.uri("/api" )
+				.uri("/api")
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitResponse()
 				.awaitBody<Banner>()
@@ -63,25 +66,36 @@ class Handlers(builder: WebClient.Builder) {
 				.bodyAndAwait(listOf(banner1, banner2))
 	}
 
-	suspend fun parallel(request: ServerRequest): ServerResponse  = coroutineScope {
+	suspend fun parallel(request: ServerRequest): ServerResponse = coroutineScope {
 
-		val deferredBanner1 = async { client
-				.get()
-				.uri("/api" )
-				.accept(MediaType.APPLICATION_JSON)
-				.awaitResponse()
-				.awaitBody<Banner>() }
-		val deferredBanner2 = async { client
-				.get()
-				.uri("/api")
-				.accept(MediaType.APPLICATION_JSON)
-				.awaitResponse()
-				.awaitBody<Banner>()
+		val deferredBanner1 = async {
+			client
+					.get()
+					.uri("/api")
+					.accept(MediaType.APPLICATION_JSON)
+					.awaitResponse()
+					.awaitBody<Banner>()
+		}
+		val deferredBanner2 = async {
+			client
+					.get()
+					.uri("/api")
+					.accept(MediaType.APPLICATION_JSON)
+					.awaitResponse()
+					.awaitBody<Banner>()
 		}
 		ServerResponse
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyAndAwait(listOf(deferredBanner1.await(), deferredBanner2.await()))
+	}
+
+	suspend fun error(request: ServerRequest): ServerResponse {
+		throw IllegalStateException()
+	}
+
+	suspend fun cancel(request: ServerRequest): ServerResponse {
+		throw CancellationException()
 	}
 }
 
