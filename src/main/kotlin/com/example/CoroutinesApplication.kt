@@ -1,6 +1,7 @@
 package com.example
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -68,7 +69,7 @@ class Handlers(builder: WebClient.Builder) {
 
 	suspend fun parallel(request: ServerRequest): ServerResponse = coroutineScope {
 
-		val deferredBanner1 = async {
+		val deferredBanner1: Deferred<Banner> = async {
 			client
 					.get()
 					.uri("/api")
@@ -76,7 +77,7 @@ class Handlers(builder: WebClient.Builder) {
 					.awaitResponse()
 					.awaitBody<Banner>()
 		}
-		val deferredBanner2 = async {
+		val deferredBanner2: Deferred<Banner> = async {
 			client
 					.get()
 					.uri("/api")
