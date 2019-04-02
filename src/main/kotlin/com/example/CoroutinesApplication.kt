@@ -11,7 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
-import org.springframework.web.reactive.function.client.awaitResponse
+import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.server.*
 
 @SpringBootApplication
@@ -53,13 +53,13 @@ class Handlers(builder: WebClient.Builder) {
 				.get()
 				.uri("/api")
 				.accept(MediaType.APPLICATION_JSON)
-				.awaitResponse()
+				.awaitExchange()
 				.awaitBody<Banner>()
 		val banner2 = client
 				.get()
 				.uri("/api")
 				.accept(MediaType.APPLICATION_JSON)
-				.awaitResponse()
+				.awaitExchange()
 				.awaitBody<Banner>()
 		return ServerResponse
 				.ok()
@@ -74,7 +74,7 @@ class Handlers(builder: WebClient.Builder) {
 					.get()
 					.uri("/api")
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitResponse()
+					.awaitExchange()
 					.awaitBody<Banner>()
 		}
 		val deferredBanner2: Deferred<Banner> = async {
@@ -82,7 +82,7 @@ class Handlers(builder: WebClient.Builder) {
 					.get()
 					.uri("/api")
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitResponse()
+					.awaitExchange()
 					.awaitBody<Banner>()
 		}
 		ServerResponse
