@@ -2,8 +2,10 @@ package com.example
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.flow
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -15,12 +17,14 @@ import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.server.*
 
 @SpringBootApplication
+@FlowPreview
 class CoroutinesApplication {
 
 	@Bean
 	fun routes(handlers: Handlers) = coRouter {
 		GET("/", handlers::index)
-		GET("/api", handlers::api)
+		GET("/suspend", handlers::api)
+		GET("/flow", handlers::apiFlow)
 		GET("/sequential", handlers::sequential)
 		GET("/parallel", handlers::parallel)
 		GET("/error", handlers::error)
@@ -48,16 +52,25 @@ class Handlers(builder: WebClient.Builder) {
 					.contentType(MediaType.APPLICATION_JSON)
 					.bodyAndAwait(banner)
 
+	suspend fun apiFlow(request: ServerRequest) =
+			ServerResponse
+					.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.bodyAndAwait(flow {
+						emit(banner)
+						emit(banner)
+					})
+
 	suspend fun sequential(request: ServerRequest): ServerResponse {
 		val banner1 = client
 				.get()
-				.uri("/api")
+				.uri("/suspend")
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitExchange()
 				.awaitBody<Banner>()
 		val banner2 = client
 				.get()
-				.uri("/api")
+				.uri("/suspend")
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitExchange()
 				.awaitBody<Banner>()
@@ -72,7 +85,7 @@ class Handlers(builder: WebClient.Builder) {
 		val deferredBanner1: Deferred<Banner> = async {
 			client
 					.get()
-					.uri("/api")
+					.uri("/suspend")
 					.accept(MediaType.APPLICATION_JSON)
 					.awaitExchange()
 					.awaitBody<Banner>()
@@ -80,7 +93,7 @@ class Handlers(builder: WebClient.Builder) {
 		val deferredBanner2: Deferred<Banner> = async {
 			client
 					.get()
-					.uri("/api")
+					.uri("/suspend")
 					.accept(MediaType.APPLICATION_JSON)
 					.awaitExchange()
 					.awaitBody<Banner>()

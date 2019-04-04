@@ -1,6 +1,5 @@
 package com.example
 
-
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -10,19 +9,19 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
+class CoroutinesControllerTests(@Autowired val client: WebTestClient) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
 
 	@Test
 	fun index() {
-		client.get().uri("/").exchange().expectStatus().is2xxSuccessful.expectBody()
+		client.get().uri("/controller/").exchange().expectStatus().is2xxSuccessful.expectBody()
 	}
 
 	@Test
 	fun api() {
 		client.get()
-				.uri("/suspend")
+				.uri("/controller/suspend")
 				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus()
@@ -34,7 +33,7 @@ class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
 	@Test
 	fun apiFlow() {
 		client.get()
-				.uri("/flow")
+				.uri("/controller/flow")
 				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus()
@@ -45,7 +44,7 @@ class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
 	@Test
 	fun sequential() {
 		client.get()
-				.uri("/sequential")
+				.uri("/controller/sequential")
 				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus()
@@ -56,7 +55,7 @@ class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
 	@Test
 	fun parallel() {
 		client.get()
-				.uri("/parallel")
+				.uri("/controller/parallel")
 				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus()
@@ -66,12 +65,12 @@ class CoroutinesApplicationTests(@Autowired val client: WebTestClient) {
 
 	@Test
 	fun error() {
-		client.get().uri("/error").exchange().expectStatus().is5xxServerError
+		client.get().uri("/controller/error").exchange().expectStatus().is5xxServerError
 	}
 
 	@Test
 	fun cancel() {
-		client.get().uri("/cancel").exchange().expectStatus().is5xxServerError
+		client.get().uri("/controller/cancel").exchange().expectStatus().is5xxServerError
 	}
 
 }
