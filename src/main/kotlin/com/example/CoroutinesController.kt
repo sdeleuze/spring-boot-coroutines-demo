@@ -95,12 +95,12 @@ class CoroutinesController(builder: WebClient.Builder) {
 	}
 
 	@GetMapping("/error")
-	suspend fun error(): ServerResponse {
+	suspend fun error() {
 		throw IllegalStateException()
 	}
 
 	@GetMapping("/cancel")
-	suspend fun cancel(request: ServerRequest): ServerResponse {
+	suspend fun cancel() {
 		throw CancellationException()
 	}
 
