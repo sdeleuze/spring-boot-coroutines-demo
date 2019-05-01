@@ -64,6 +64,17 @@ class CoroutinesControllerTests(@Autowired val client: WebTestClient) {
 	}
 
 	@Test
+	fun flowViaWebClient() {
+		client.get()
+				.uri("/controller/flow-via-webclient")
+				.accept(MediaType.APPLICATION_JSON)
+				.exchange()
+				.expectStatus()
+				.is2xxSuccessful
+				.expectBodyList<Banner>().contains(banner, banner)
+	}
+
+	@Test
 	fun error() {
 		client.get().uri("/controller/error").exchange().expectStatus().is5xxServerError
 	}

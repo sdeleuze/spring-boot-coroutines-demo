@@ -18,9 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
-import org.springframework.web.reactive.function.server.ServerRequest
-import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.bodyAndAwait
+import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
 @RequestMapping("/controller")
@@ -93,6 +91,14 @@ class CoroutinesController(builder: WebClient.Builder) {
 		}
 		listOf(deferredBanner1.await(), deferredBanner2.await())
 	}
+
+	@GetMapping("/flow-via-webclient") @ResponseBody
+	suspend fun flowViaWebClient() =
+			client.get()
+					.uri("/flow")
+					.accept(MediaType.APPLICATION_JSON)
+					.awaitExchange()
+					.bodyToFlow<Banner>()
 
 	@GetMapping("/error")
 	suspend fun error() {
