@@ -2,11 +2,12 @@ package com.example
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Controller
@@ -22,7 +23,7 @@ import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
 @RequestMapping("/controller")
-@FlowPreview
+@ExperimentalCoroutinesApi
 class CoroutinesController(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -33,12 +34,6 @@ class CoroutinesController(builder: WebClient.Builder) {
 	suspend fun suspendingEndpoint(): Banner {
 		delay(10)
 		return banner
-	}
-
-	@GetMapping("/flow") @ResponseBody
-	fun flowEndpoint()= flow {
-		emit(banner)
-		emit(banner)
 	}
 
 	@GetMapping("/deferred") @ResponseBody
@@ -54,48 +49,39 @@ class CoroutinesController(builder: WebClient.Builder) {
 		return "index"
 	}
 
-	@GetMapping("/sequential") @ResponseBody
-	suspend fun sequential(): List<Banner> {
-		val banner1 = client
+	@FlowPreview
+	@GetMapping("/sequential-flow") @ResponseBody
+	suspend fun sequentialFlow() = flow {
+		for (i in 1..4) {
+			emit(client
+					.get()
+					.uri("/suspend")
+					.accept(MediaType.APPLICATION_JSON)
+					.awaitExchange()
+					.awaitBody<Banner>())}
+		}
+
+	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
+	@FlowPreview
+	@GetMapping("/concurrent-flow") @ResponseBody
+	suspend fun concurrentFlow() = flow {
+		for (i in 1..4) emit("/suspend")
+	}.flatMapMerge {
+		flow {
+			emit(client
 				.get()
-				.uri("/suspend")
+				.uri(it)
 				.accept(MediaType.APPLICATION_JSON)
 				.awaitExchange()
-				.awaitBody<Banner>()
-		val banner2 = client
-				.get()
-				.uri("/suspend")
-				.accept(MediaType.APPLICATION_JSON)
-				.awaitExchange()
-				.awaitBody<Banner>()
-		return listOf(banner1, banner2)
+				.awaitBody<Banner>())
+		}
 	}
 
-	@GetMapping("/parallel") @ResponseBody
-	suspend fun parallel(): List<Banner> = coroutineScope {
-		val deferredBanner1: Deferred<Banner> = async {
-			client
-					.get()
-					.uri("/suspend")
-					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
-					.awaitBody<Banner>()
-		}
-		val deferredBanner2: Deferred<Banner> = async {
-			client
-					.get()
-					.uri("/suspend")
-					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
-					.awaitBody<Banner>()
-		}
-		listOf(deferredBanner1.await(), deferredBanner2.await())
-	}
 
 	@GetMapping("/flow-via-webclient") @ResponseBody
 	suspend fun flowViaWebClient() =
 			client.get()
-					.uri("/flow")
+					.uri("/concurrent-flow")
 					.accept(MediaType.APPLICATION_JSON)
 					.awaitExchange()
 					.bodyToFlow<Banner>()

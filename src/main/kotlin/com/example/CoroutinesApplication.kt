@@ -1,10 +1,9 @@
 package com.example
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -14,19 +13,22 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
-import org.springframework.web.reactive.function.server.*
+import org.springframework.web.reactive.function.server.ServerRequest
+import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.bodyAndAwait
+import org.springframework.web.reactive.function.server.coRouter
+import org.springframework.web.reactive.function.server.renderAndAwait
 
 @SpringBootApplication
-@FlowPreview
+@ExperimentalCoroutinesApi
 class CoroutinesApplication {
 
 	@Bean
 	fun routes(handlers: Handlers) = coRouter {
 		GET("/", handlers::index)
-		GET("/suspend", handlers::api)
-		GET("/flow", handlers::apiFlow)
-		GET("/sequential", handlers::sequential)
-		GET("/parallel", handlers::parallel)
+		GET("/suspend", handlers::suspending)
+		GET("/sequential-flow", handlers::sequentialFlow)
+		GET("/concurrent-flow", handlers::concurrentFlow)
 		GET("/error", handlers::error)
 		GET("/cancel", handlers::cancel)
 	}
@@ -34,7 +36,9 @@ class CoroutinesApplication {
 
 data class Banner(val title: String, val message: String)
 
+@Suppress("DuplicatedCode")
 @Component
+@ExperimentalCoroutinesApi
 class Handlers(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -46,63 +50,42 @@ class Handlers(builder: WebClient.Builder) {
 					.ok()
 					.renderAndAwait("index", mapOf("banner" to banner))
 
-	suspend fun api(request: ServerRequest) =
+	suspend fun suspending(request: ServerRequest) =
 			ServerResponse
 					.ok()
 					.contentType(MediaType.APPLICATION_JSON)
 					.bodyAndAwait(banner)
 
-	suspend fun apiFlow(request: ServerRequest) =
-			ServerResponse
-					.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.bodyAndAwait(flow {
-						emit(banner)
-						emit(banner)
-					})
-
-	suspend fun sequential(request: ServerRequest): ServerResponse {
-		val banner1 = client
-				.get()
-				.uri("/suspend")
-				.accept(MediaType.APPLICATION_JSON)
-				.awaitExchange()
-				.awaitBody<Banner>()
-		val banner2 = client
-				.get()
-				.uri("/suspend")
-				.accept(MediaType.APPLICATION_JSON)
-				.awaitExchange()
-				.awaitBody<Banner>()
-		return ServerResponse
-				.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.bodyAndAwait(listOf(banner1, banner2))
-	}
-
-	suspend fun parallel(request: ServerRequest): ServerResponse = coroutineScope {
-
-		val deferredBanner1: Deferred<Banner> = async {
-			client
+	suspend fun sequentialFlow(request: ServerRequest) = flow {
+		for (i in 1..4) {
+			emit(client
 					.get()
 					.uri("/suspend")
 					.accept(MediaType.APPLICATION_JSON)
 					.awaitExchange()
-					.awaitBody<Banner>()
-		}
-		val deferredBanner2: Deferred<Banner> = async {
-			client
-					.get()
-					.uri("/suspend")
-					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
-					.awaitBody<Banner>()
-		}
-		ServerResponse
+					.awaitBody<Banner>())}
+		}.let { ServerResponse
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
-				.bodyAndAwait(listOf(deferredBanner1.await(), deferredBanner2.await()))
-	}
+				.bodyAndAwait(it) }
+
+	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
+	@FlowPreview
+	suspend fun concurrentFlow(request: ServerRequest): ServerResponse = flow {
+		for (i in 1..4) emit("/suspend")
+	}.flatMapMerge {
+		flow {
+			emit(client
+					.get()
+					.uri(it)
+					.accept(MediaType.APPLICATION_JSON)
+					.awaitExchange()
+					.awaitBody<Banner>())
+		}
+	}.let { ServerResponse
+			.ok()
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyAndAwait(it) }
 
 	suspend fun error(request: ServerRequest): ServerResponse {
 		throw IllegalStateException()
@@ -113,6 +96,7 @@ class Handlers(builder: WebClient.Builder) {
 	}
 }
 
+@ExperimentalCoroutinesApi
 fun main(args: Array<String>) {
 	runApplication<CoroutinesApplication>(*args)
 }
