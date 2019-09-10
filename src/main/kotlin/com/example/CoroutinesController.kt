@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
-import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
@@ -57,7 +56,7 @@ class CoroutinesController(builder: WebClient.Builder) {
 					.get()
 					.uri("/suspend")
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
+					.retrieve()
 					.awaitBody<Banner>())}
 		}
 
@@ -72,7 +71,7 @@ class CoroutinesController(builder: WebClient.Builder) {
 				.get()
 				.uri(it)
 				.accept(MediaType.APPLICATION_JSON)
-				.awaitExchange()
+				.retrieve()
 				.awaitBody<Banner>())
 		}
 	}
@@ -83,7 +82,7 @@ class CoroutinesController(builder: WebClient.Builder) {
 			client.get()
 					.uri("/concurrent-flow")
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
+					.retrieve()
 					.bodyToFlow<Banner>()
 
 	@GetMapping("/error")

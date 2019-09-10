@@ -64,7 +64,7 @@ class Handlers(builder: WebClient.Builder) {
 					.get()
 					.uri("/suspend")
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
+					.retrieve()
 					.awaitBody<Banner>())}
 		}.let { ServerResponse
 				.ok()
@@ -81,7 +81,7 @@ class Handlers(builder: WebClient.Builder) {
 					.get()
 					.uri(it)
 					.accept(MediaType.APPLICATION_JSON)
-					.awaitExchange()
+					.retrieve()
 					.awaitBody<Banner>())
 		}
 	}.let { ServerResponse
