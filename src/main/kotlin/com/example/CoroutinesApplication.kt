@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
+import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.reactive.function.server.coRouter
 import org.springframework.web.reactive.function.server.renderAndAwait
 
@@ -24,6 +25,7 @@ import org.springframework.web.reactive.function.server.renderAndAwait
 class CoroutinesApplication {
 
 	@Bean
+	@FlowPreview
 	fun routes(handlers: Handlers) = coRouter {
 		GET("/", handlers::index)
 		GET("/suspend", handlers::suspending)
@@ -54,7 +56,7 @@ class Handlers(builder: WebClient.Builder) {
 			ServerResponse
 					.ok()
 					.contentType(MediaType.APPLICATION_JSON)
-					.bodyAndAwait(banner)
+					.bodyValueAndAwait(banner)
 
 	suspend fun sequentialFlow(request: ServerRequest) = flow {
 		for (i in 1..4) {
