@@ -21,11 +21,9 @@ import org.springframework.web.reactive.function.server.coRouter
 import org.springframework.web.reactive.function.server.renderAndAwait
 
 @SpringBootApplication
-@ExperimentalCoroutinesApi
 class CoroutinesApplication {
 
 	@Bean
-	@FlowPreview
 	fun routes(handlers: Handlers) = coRouter {
 		GET("/", handlers::index)
 		GET("/suspend", handlers::suspending)
@@ -40,7 +38,6 @@ data class Banner(val title: String, val message: String)
 
 @Suppress("DuplicatedCode")
 @Component
-@ExperimentalCoroutinesApi
 class Handlers(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -72,7 +69,7 @@ class Handlers(builder: WebClient.Builder) {
 				.bodyAndAwait(it) }
 
 	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
-	@FlowPreview
+	@UseExperimental(FlowPreview::class)
 	suspend fun concurrentFlow(request: ServerRequest): ServerResponse = flow {
 		for (i in 1..4) emit("/suspend")
 	}.flatMapMerge {
@@ -98,7 +95,6 @@ class Handlers(builder: WebClient.Builder) {
 	}
 }
 
-@ExperimentalCoroutinesApi
 fun main(args: Array<String>) {
 	runApplication<CoroutinesApplication>(*args)
 }

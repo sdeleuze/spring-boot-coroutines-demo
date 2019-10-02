@@ -2,7 +2,6 @@ package com.example
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -22,7 +21,6 @@ import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
 @RequestMapping("/controller")
-@ExperimentalCoroutinesApi
 class CoroutinesController(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -48,7 +46,6 @@ class CoroutinesController(builder: WebClient.Builder) {
 		return "index"
 	}
 
-	@FlowPreview
 	@GetMapping("/sequential-flow") @ResponseBody
 	suspend fun sequentialFlow() = flow {
 		for (i in 1..4) {
@@ -61,7 +58,7 @@ class CoroutinesController(builder: WebClient.Builder) {
 		}
 
 	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
-	@FlowPreview
+	@UseExperimental(FlowPreview::class)
 	@GetMapping("/concurrent-flow") @ResponseBody
 	suspend fun concurrentFlow() = flow {
 		for (i in 1..4) emit("/suspend")
@@ -77,7 +74,8 @@ class CoroutinesController(builder: WebClient.Builder) {
 	}
 
 
-	@GetMapping("/flow-via-webclient") @ResponseBody
+	@GetMapping("/flow-via-webclient")
+	@ResponseBody
 	suspend fun flowViaWebClient() =
 			client.get()
 					.uri("/concurrent-flow")
