@@ -1,11 +1,6 @@
 package com.example
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import org.springframework.http.MediaType
@@ -21,6 +16,7 @@ import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
 @RequestMapping("/controller")
+@FlowPreview
 class CoroutinesController(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -58,7 +54,6 @@ class CoroutinesController(builder: WebClient.Builder) {
 		}
 
 	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
-	@UseExperimental(FlowPreview::class)
 	@GetMapping("/concurrent-flow") @ResponseBody
 	suspend fun concurrentFlow() = flow {
 		for (i in 1..4) emit("/suspend")

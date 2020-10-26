@@ -1,7 +1,6 @@
 package com.example
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
@@ -12,15 +11,10 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
-import org.springframework.web.reactive.function.client.awaitExchange
-import org.springframework.web.reactive.function.server.ServerRequest
-import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.bodyAndAwait
-import org.springframework.web.reactive.function.server.bodyValueAndAwait
-import org.springframework.web.reactive.function.server.coRouter
-import org.springframework.web.reactive.function.server.renderAndAwait
+import org.springframework.web.reactive.function.server.*
 
 @SpringBootApplication
+@FlowPreview
 class CoroutinesApplication {
 
 	@Bean
@@ -38,6 +32,7 @@ data class Banner(val title: String, val message: String)
 
 @Suppress("DuplicatedCode")
 @Component
+@FlowPreview
 class Handlers(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -69,7 +64,6 @@ class Handlers(builder: WebClient.Builder) {
 				.bodyAndAwait(it) }
 
 	// TODO Improve when https://github.com/Kotlin/kotlinx.coroutines/issues/1147 will be fixed
-	@UseExperimental(FlowPreview::class)
 	suspend fun concurrentFlow(request: ServerRequest): ServerResponse = flow {
 		for (i in 1..4) emit("/suspend")
 	}.flatMapMerge {
@@ -95,6 +89,7 @@ class Handlers(builder: WebClient.Builder) {
 	}
 }
 
+@FlowPreview
 fun main(args: Array<String>) {
 	runApplication<CoroutinesApplication>(*args)
 }
