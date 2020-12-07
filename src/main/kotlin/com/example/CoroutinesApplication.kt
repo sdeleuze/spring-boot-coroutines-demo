@@ -1,7 +1,5 @@
 package com.example
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -14,7 +12,6 @@ import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.server.*
 
 @SpringBootApplication
-@FlowPreview
 class CoroutinesApplication {
 
 	@Bean
@@ -24,7 +21,6 @@ class CoroutinesApplication {
 		GET("/sequential-flow", handlers::sequentialFlow)
 		GET("/concurrent-flow", handlers::concurrentFlow)
 		GET("/error", handlers::error)
-		GET("/cancel", handlers::cancel)
 	}
 }
 
@@ -32,7 +28,6 @@ data class Banner(val title: String, val message: String)
 
 @Suppress("DuplicatedCode")
 @Component
-@FlowPreview
 class Handlers(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -83,13 +78,8 @@ class Handlers(builder: WebClient.Builder) {
 	suspend fun error(request: ServerRequest): ServerResponse {
 		throw IllegalStateException()
 	}
-
-	suspend fun cancel(request: ServerRequest): ServerResponse {
-		throw CancellationException()
-	}
 }
 
-@FlowPreview
 fun main(args: Array<String>) {
 	runApplication<CoroutinesApplication>(*args)
 }

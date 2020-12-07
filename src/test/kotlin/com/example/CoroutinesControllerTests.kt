@@ -69,9 +69,4 @@ class CoroutinesControllerTests(@Autowired val client: WebTestClient) {
 		client.get().uri("/controller/error").exchange().expectStatus().is5xxServerError
 	}
 
-	@Test
-	fun cancel() {
-		client.get().uri("/controller/cancel").exchange().expectStatus().is5xxServerError
-	}
-
 }

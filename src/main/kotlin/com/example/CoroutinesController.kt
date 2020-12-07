@@ -16,7 +16,6 @@ import org.springframework.web.reactive.function.client.bodyToFlow
 
 @Controller
 @RequestMapping("/controller")
-@FlowPreview
 class CoroutinesController(builder: WebClient.Builder) {
 
 	private val banner = Banner("title", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -79,13 +78,9 @@ class CoroutinesController(builder: WebClient.Builder) {
 					.bodyToFlow<Banner>()
 
 	@GetMapping("/error")
+	@ResponseBody
 	suspend fun error() {
 		throw IllegalStateException()
-	}
-
-	@GetMapping("/cancel")
-	suspend fun cancel() {
-		throw CancellationException()
 	}
 
 }
